@@ -30,6 +30,7 @@ import io.crnk.core.repository.decorate.Wrapper;
 import io.crnk.core.utils.Nullable;
 import io.crnk.operations.Operation;
 import io.crnk.operations.OperationResponse;
+import io.crnk.operations.internal.OperationLidUtils;
 import io.crnk.operations.internal.OperationParameterUtils;
 import io.crnk.operations.server.order.DependencyOrderStrategy;
 import io.crnk.operations.server.order.OperationOrderStrategy;
@@ -257,7 +258,10 @@ public class OperationsModule implements Module {
 
         RegistryEntry rootEntry = firstOperation.getPath().getRootEntry();
 
-        if (supportsBulk(rootEntry)) {
+		Map<String, Set<String>> lidsPerType = OperationLidUtils.parseLidsPerType(operations);
+		Map<String, String> lidPerId = new HashMap<>();
+
+		if (supportsBulk(rootEntry)) {
             String method = firstOperation.getOperation().getOp();
 
             JsonPath repositoryPath = new ResourcePath(rootEntry, null);
@@ -303,7 +307,9 @@ public class OperationsModule implements Module {
                 Response response = requestDispatcher.dispatchRequest(path, method, parameters, requestBody);
                 boolean success = response.getHttpStatus() < 400;
 
-                OperationResponse operationResponse = new OperationResponse();
+				trackLids(lidsPerType, lidPerId, success, operation.getValue(), response.getDocument().getData());
+
+				OperationResponse operationResponse = new OperationResponse();
                 operationResponse.setStatus(response.getHttpStatus());
                 if (displayOperationResponseOnSuccess || !success) {
                     copyDocument(operationResponse, response.getDocument(), true);
@@ -320,7 +326,22 @@ public class OperationsModule implements Module {
 
     }
 
-    private boolean supportsBulk(RegistryEntry rootEntry) {
+	private static void trackLids(
+			Map<String, Set<String>> lidsPerType,
+			Map<String, String> lidPerId,
+			boolean success,
+			Resource resource,
+			Nullable<Object> responseData
+	) {
+		if (success && OperationLidUtils.hasLid(resource, lidsPerType)) {
+			if (responseData.isPresent() && responseData.get() instanceof Resource) {
+				Resource r = (Resource) responseData.get();
+				lidPerId.put(resource.getId(), r.getId());
+			}
+		}
+	}
+
+	private boolean supportsBulk(RegistryEntry rootEntry) {
         Object implementation = rootEntry.getResourceRepository().getImplementation();
         boolean supported = implementation instanceof BulkResourceRepository;
         if (!supported) {

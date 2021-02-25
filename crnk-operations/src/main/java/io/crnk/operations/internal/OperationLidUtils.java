@@ -1,5 +1,6 @@
 package io.crnk.operations.internal;
 
+import io.crnk.core.engine.document.Resource;
 import io.crnk.core.engine.http.HttpMethod;
 import io.crnk.operations.Operation;
 import io.crnk.operations.server.order.OrderedOperation;
@@ -22,8 +23,13 @@ public final class OperationLidUtils {
 		ops.forEach(o -> {
 			Set<String> orDefault = map.getOrDefault(o.getValue().getType(), new HashSet<>());
 			orDefault.add(o.getValue().getId());
-			map.put(o.getValue().getType(),orDefault);
+			map.put(o.getValue().getType(), orDefault);
 		});
 		return map;
+	}
+
+	public static boolean hasLid(Resource resource, Map<String, Set<String>> lidsPerType) {
+		return lidsPerType.containsKey(resource.getType())
+				&& lidsPerType.get(resource.getType()).contains(resource.getId());
 	}
 }
