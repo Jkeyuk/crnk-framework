@@ -197,6 +197,8 @@ public class OperationsModule implements Module {
 
         PathBuilder pathBuilder = getPathBuilder();
 
+		Map<String, Set<String>> lidsPerType = OperationLidUtils.parseLidsPerType(orderedOperations);
+		Map<String, String> lidPerId = new HashMap<>();
 
         while (index < orderedOperations.size()) {
             OrderedOperation orderedOperation = orderedOperations.get(index);
@@ -214,7 +216,7 @@ public class OperationsModule implements Module {
 
             if (!method.equals(bulkMethod) || !type.equals(bulkType)) {
                 if (!bulk.isEmpty()) {
-                    boolean success = bulkExecuteOperations(bulk, responses);
+                    boolean success = bulkExecuteOperations(bulk, responses, lidsPerType, lidPerId);
                     if (!success) {
                         successful = false;
                         if (!resumeOnError) {
@@ -231,7 +233,7 @@ public class OperationsModule implements Module {
         }
 
         if (!bulk.isEmpty()) {
-            boolean success = bulkExecuteOperations(bulk, responses);
+            boolean success = bulkExecuteOperations(bulk, responses, lidsPerType, lidPerId);
             if (!success) {
                 successful = false;
             }
@@ -251,15 +253,17 @@ public class OperationsModule implements Module {
 
     private boolean legacySetup;
 
-    private boolean bulkExecuteOperations(List<OrderedOperation> operations, OperationResponse[] responses) {
+    private boolean bulkExecuteOperations(
+			List<OrderedOperation> operations,
+			OperationResponse[] responses,
+			Map<String, Set<String>> lidsPerType,
+			Map<String, String> lidPerId
+	) {
         RequestDispatcher requestDispatcher = moduleContext.getRequestDispatcher();
 
         OrderedOperation firstOperation = operations.get(0);
 
         RegistryEntry rootEntry = firstOperation.getPath().getRootEntry();
-
-		Map<String, Set<String>> lidsPerType = OperationLidUtils.parseLidsPerType(operations);
-		Map<String, String> lidPerId = new HashMap<>();
 
 		if (supportsBulk(rootEntry)) {
             String method = firstOperation.getOperation().getOp();
@@ -301,6 +305,9 @@ public class OperationsModule implements Module {
                 String path = OperationParameterUtils.parsePath(operation.getPath());
                 Map<String, Set<String>> parameters = OperationParameterUtils.parseParameters(operation.getPath());
                 String method = operation.getOp();
+
+				OperationLidUtils.resolveLids(lidsPerType, operation.getValue().getRelationships(), lidPerId);
+
                 Document requestBody = new Document();
                 requestBody.setData(Nullable.of(operation.getValue()));
 
