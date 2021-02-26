@@ -314,7 +314,9 @@ public class OperationsModule implements Module {
                 Response response = requestDispatcher.dispatchRequest(path, method, parameters, requestBody);
                 boolean success = response.getHttpStatus() < 400;
 
-				trackLids(lidsPerType, lidPerId, success, operation.getValue(), response.getDocument().getData());
+				if (success && OperationLidUtils.hasLid(lidsPerType, operation.getValue().getType(), operation.getValue().getId())) {
+					trackLids(lidPerId, operation.getValue(), response.getDocument().getData());
+				}
 
 				OperationResponse operationResponse = new OperationResponse();
                 operationResponse.setStatus(response.getHttpStatus());
@@ -334,17 +336,13 @@ public class OperationsModule implements Module {
     }
 
 	private static void trackLids(
-			Map<String, Set<String>> lidsPerType,
 			Map<String, String> lidPerId,
-			boolean success,
 			Resource resource,
 			Nullable<Object> responseData
 	) {
-		if (success && OperationLidUtils.hasLid(resource, lidsPerType)) {
-			if (responseData.isPresent() && responseData.get() instanceof Resource) {
-				Resource r = (Resource) responseData.get();
-				lidPerId.put(resource.getId(), r.getId());
-			}
+		if (responseData.isPresent() && responseData.get() instanceof Resource) {
+			Resource r = (Resource) responseData.get();
+			lidPerId.put(resource.getId(), r.getId());
 		}
 	}
 
