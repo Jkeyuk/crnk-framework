@@ -1,9 +1,9 @@
 package io.crnk.operations.internal;
 
 import io.crnk.core.engine.document.Relationship;
-import io.crnk.core.engine.document.Resource;
 import io.crnk.core.engine.document.ResourceIdentifier;
 import io.crnk.core.engine.http.HttpMethod;
+import io.crnk.core.engine.internal.utils.StringUtils;
 import io.crnk.core.utils.Nullable;
 import io.crnk.operations.server.order.OrderedOperation;
 
@@ -32,6 +32,9 @@ public final class OperationLidUtils {
 	}
 
 	public static boolean hasLid(Map<String, Set<String>> lidsPerType, String type, String id) {
+		if (StringUtils.isBlank(type) || StringUtils.isBlank(id) || isEmpty(lidsPerType)) {
+			return false;
+		}
 		return lidsPerType.containsKey(type) && lidsPerType.get(type).contains(id);
 	}
 
