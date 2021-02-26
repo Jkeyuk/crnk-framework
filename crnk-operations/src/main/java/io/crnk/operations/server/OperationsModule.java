@@ -306,7 +306,7 @@ public class OperationsModule implements Module {
                 Map<String, Set<String>> parameters = OperationParameterUtils.parseParameters(operation.getPath());
                 String method = operation.getOp();
 
-				OperationLidUtils.resolveLids(lidsPerType, operation.getValue().getRelationships(), lidPerId);
+				OperationLidUtils.resolveLidsForRelations(lidsPerType, operation.getValue().getRelationships(), lidPerId);
 
                 Document requestBody = new Document();
                 requestBody.setData(Nullable.of(operation.getValue()));

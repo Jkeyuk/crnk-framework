@@ -38,7 +38,7 @@ public final class OperationLidUtils {
 		return lidsPerType.containsKey(type) && lidsPerType.get(type).contains(id);
 	}
 
-	public static void resolveLids(
+	public static void resolveLidsForRelations(
 			Map<String, Set<String>> lidsPerType,
 			Map<String, Relationship> relationships,
 			Map<String, String> lidPerId
