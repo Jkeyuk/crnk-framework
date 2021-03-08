@@ -2,6 +2,7 @@ package io.crnk.operations;
 
 import io.crnk.core.engine.document.Resource;
 import io.crnk.core.engine.internal.utils.CompareUtils;
+import io.crnk.operations.document.OperationResource;
 
 public class Operation {
 
@@ -9,12 +10,12 @@ public class Operation {
 
 	private String path;
 
-	private Resource value;
+	private OperationResource value;
 
 	public Operation() {
 	}
 
-	public Operation(String op, String path, Resource value) {
+	public Operation(String op, String path, OperationResource value) {
 		this.op = op;
 		this.path = path;
 		this.value = value;
@@ -40,7 +41,7 @@ public class Operation {
 		return value;
 	}
 
-	public void setValue(Resource value) {
+	public void setValue(OperationResource value) {
 		this.value = value;
 	}
 

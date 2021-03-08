@@ -5,6 +5,7 @@ import io.crnk.core.engine.document.Resource;
 import io.crnk.core.engine.document.ResourceIdentifier;
 import io.crnk.core.engine.http.HttpMethod;
 import io.crnk.core.utils.Nullable;
+import io.crnk.operations.document.OperationResource;
 import io.crnk.operations.server.order.DependencyOrderStrategy;
 import io.crnk.operations.server.order.OrderedOperation;
 import org.junit.Assert;
@@ -173,7 +174,7 @@ public class DependencyOrderStrategyTest {
 	}
 
 	private Operation createOperation(String type, String id, HttpMethod method) {
-		Resource resource = new Resource();
+		OperationResource resource = new OperationResource();
 		resource.setId(id);
 		resource.setType(type);
 

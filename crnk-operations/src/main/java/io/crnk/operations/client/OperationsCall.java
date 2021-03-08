@@ -27,6 +27,7 @@ import io.crnk.core.queryspec.internal.QuerySpecAdapter;
 import io.crnk.core.repository.response.JsonApiResponse;
 import io.crnk.operations.Operation;
 import io.crnk.operations.OperationResponse;
+import io.crnk.operations.document.OperationResource;
 import io.crnk.operations.server.OperationsRequestProcessor;
 
 public class OperationsCall {
@@ -44,7 +45,7 @@ public class OperationsCall {
 	public void add(HttpMethod method, Object object) {
 		Operation operation = new Operation();
 
-		Resource resource = toResource(object);
+		OperationResource resource = toResource(object);
 
 		operation.setOp(method.toString());
 		operation.setPath(computePath(method, resource));
@@ -74,7 +75,7 @@ public class OperationsCall {
 		return resource.getType() + "/" + resource.getId() + "/";
 	}
 
-	protected Resource toResource(Object object) {
+	protected OperationResource toResource(Object object) {
 		JsonApiResponse response = new JsonApiResponse();
 		response.setEntity(object);
 
@@ -88,7 +89,8 @@ public class OperationsCall {
 		DocumentMapper documentMapper = crnk.getDocumentMapper();
 		DocumentMappingConfig mappingConfig = new DocumentMappingConfig();
 		Document document = documentMapper.toDocument(response, queryAdapter, mappingConfig).get();
-		return document.getSingleData().get();
+		Resource resource = document.getSingleData().get();
+		return new OperationResource(resource);
 	}
 
 	protected <T> T fromResource(Document document, Class<T> clazz) {
