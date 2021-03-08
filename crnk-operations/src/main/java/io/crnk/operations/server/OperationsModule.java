@@ -30,6 +30,7 @@ import io.crnk.core.repository.decorate.Wrapper;
 import io.crnk.core.utils.Nullable;
 import io.crnk.operations.Operation;
 import io.crnk.operations.OperationResponse;
+import io.crnk.operations.internal.OperationLidUtils;
 import io.crnk.operations.internal.OperationParameterUtils;
 import io.crnk.operations.server.order.DependencyOrderStrategy;
 import io.crnk.operations.server.order.OperationOrderStrategy;
@@ -196,6 +197,8 @@ public class OperationsModule implements Module {
 
         PathBuilder pathBuilder = getPathBuilder();
 
+		Map<String, Set<String>> lidsPerType = OperationLidUtils.parseLidsPerType(orderedOperations);
+		Map<String, String> lidPerId = new HashMap<>();
 
         while (index < orderedOperations.size()) {
             OrderedOperation orderedOperation = orderedOperations.get(index);
@@ -213,7 +216,7 @@ public class OperationsModule implements Module {
 
             if (!method.equals(bulkMethod) || !type.equals(bulkType)) {
                 if (!bulk.isEmpty()) {
-                    boolean success = bulkExecuteOperations(bulk, responses);
+                    boolean success = bulkExecuteOperations(bulk, responses, lidsPerType, lidPerId);
                     if (!success) {
                         successful = false;
                         if (!resumeOnError) {
@@ -230,7 +233,7 @@ public class OperationsModule implements Module {
         }
 
         if (!bulk.isEmpty()) {
-            boolean success = bulkExecuteOperations(bulk, responses);
+            boolean success = bulkExecuteOperations(bulk, responses, lidsPerType, lidPerId);
             if (!success) {
                 successful = false;
             }
@@ -250,14 +253,19 @@ public class OperationsModule implements Module {
 
     private boolean legacySetup;
 
-    private boolean bulkExecuteOperations(List<OrderedOperation> operations, OperationResponse[] responses) {
+    private boolean bulkExecuteOperations(
+			List<OrderedOperation> operations,
+			OperationResponse[] responses,
+			Map<String, Set<String>> lidsPerType,
+			Map<String, String> lidPerId
+	) {
         RequestDispatcher requestDispatcher = moduleContext.getRequestDispatcher();
 
         OrderedOperation firstOperation = operations.get(0);
 
         RegistryEntry rootEntry = firstOperation.getPath().getRootEntry();
 
-        if (supportsBulk(rootEntry)) {
+		if (supportsBulk(rootEntry)) {
             String method = firstOperation.getOperation().getOp();
 
             JsonPath repositoryPath = new ResourcePath(rootEntry, null);
@@ -297,13 +305,20 @@ public class OperationsModule implements Module {
                 String path = OperationParameterUtils.parsePath(operation.getPath());
                 Map<String, Set<String>> parameters = OperationParameterUtils.parseParameters(operation.getPath());
                 String method = operation.getOp();
+
+				OperationLidUtils.resolveLidsForRelations(lidsPerType, operation.getValue().getRelationships(), lidPerId);
+
                 Document requestBody = new Document();
                 requestBody.setData(Nullable.of(operation.getValue()));
 
                 Response response = requestDispatcher.dispatchRequest(path, method, parameters, requestBody);
                 boolean success = response.getHttpStatus() < 400;
 
-                OperationResponse operationResponse = new OperationResponse();
+				if (success && OperationLidUtils.hasLid(lidsPerType, operation.getValue().getType(), operation.getValue().getId())) {
+					trackLids(lidPerId, operation.getValue(), response.getDocument().getData());
+				}
+
+				OperationResponse operationResponse = new OperationResponse();
                 operationResponse.setStatus(response.getHttpStatus());
                 if (displayOperationResponseOnSuccess || !success) {
                     copyDocument(operationResponse, response.getDocument(), true);
@@ -320,7 +335,18 @@ public class OperationsModule implements Module {
 
     }
 
-    private boolean supportsBulk(RegistryEntry rootEntry) {
+	private static void trackLids(
+			Map<String, String> lidPerId,
+			Resource resource,
+			Nullable<Object> responseData
+	) {
+		if (responseData.isPresent() && responseData.get() instanceof Resource) {
+			Resource r = (Resource) responseData.get();
+			lidPerId.put(resource.getId(), r.getId());
+		}
+	}
+
+	private boolean supportsBulk(RegistryEntry rootEntry) {
         Object implementation = rootEntry.getResourceRepository().getImplementation();
         boolean supported = implementation instanceof BulkResourceRepository;
         if (!supported) {
