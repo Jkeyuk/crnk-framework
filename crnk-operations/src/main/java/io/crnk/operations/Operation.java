@@ -37,7 +37,7 @@ public class Operation {
 		this.path = path;
 	}
 
-	public Resource getValue() {
+	public OperationResource getValue() {
 		return value;
 	}
 
