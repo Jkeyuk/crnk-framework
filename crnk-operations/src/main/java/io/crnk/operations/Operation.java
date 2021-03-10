@@ -1,6 +1,5 @@
 package io.crnk.operations;
 
-import io.crnk.core.engine.document.Resource;
 import io.crnk.core.engine.internal.utils.CompareUtils;
 import io.crnk.operations.document.OperationResource;
 
