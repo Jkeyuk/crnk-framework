@@ -1,6 +1,6 @@
 package io.crnk.operations;
 
-import io.crnk.core.engine.document.Resource;
+import io.crnk.operations.document.OperationResource;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 import org.junit.Assert;
@@ -17,9 +17,9 @@ public class OperationTest {
 
 	@Test
 	public void testHashCode() {
-		Operation op1 = new Operation("a", "b", new Resource());
-		Operation op2 = new Operation("a", "b", new Resource());
-		Operation op3 = new Operation("x", "b", new Resource());
+		Operation op1 = new Operation("a", "b", new OperationResource());
+		Operation op2 = new Operation("a", "b", new OperationResource());
+		Operation op3 = new Operation("x", "b", new OperationResource());
 		Assert.assertEquals(op1, op2);
 		Assert.assertNotEquals(op3.hashCode(), op2.hashCode());
 	}

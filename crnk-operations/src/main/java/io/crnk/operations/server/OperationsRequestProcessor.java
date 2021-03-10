@@ -11,6 +11,7 @@ import io.crnk.core.engine.http.HttpRequestContext;
 import io.crnk.core.engine.http.HttpRequestProcessor;
 import io.crnk.core.engine.http.HttpResponse;
 import io.crnk.core.engine.internal.exception.ExceptionMapperRegistry;
+import io.crnk.core.engine.internal.utils.StringUtils;
 import io.crnk.core.engine.query.QueryContext;
 import io.crnk.core.module.Module;
 import io.crnk.operations.Operation;
@@ -39,6 +40,15 @@ public class OperationsRequestProcessor implements HttpRequestProcessor {
             ObjectMapper mapper = moduleContext.getObjectMapper();
             try {
                 List<Operation> operations = Arrays.asList(mapper.readValue(context.getRequestBody(), Operation[].class));
+
+                // Use Local Id if present
+				if (!operations.isEmpty()) {
+					operations.forEach(operation -> {
+						if (!StringUtils.isBlank(operation.getValue().getLid())) {
+							operation.getValue().setId(operation.getValue().getLid());
+						}
+					});
+				}
 
                 QueryContext queryContext = context.getQueryContext();
                 List<OperationResponse> responses = operationsModule.apply(operations, queryContext);
