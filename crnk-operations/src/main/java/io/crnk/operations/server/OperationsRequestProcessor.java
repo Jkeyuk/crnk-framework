@@ -41,15 +41,6 @@ public class OperationsRequestProcessor implements HttpRequestProcessor {
             try {
                 List<Operation> operations = Arrays.asList(mapper.readValue(context.getRequestBody(), Operation[].class));
 
-                // Use Local Id if present
-				if (!operations.isEmpty()) {
-					operations.forEach(operation -> {
-						if (!StringUtils.isBlank(operation.getValue().getLid())) {
-							operation.getValue().setId(operation.getValue().getLid());
-						}
-					});
-				}
-
                 QueryContext queryContext = context.getQueryContext();
                 List<OperationResponse> responses = operationsModule.apply(operations, queryContext);
 

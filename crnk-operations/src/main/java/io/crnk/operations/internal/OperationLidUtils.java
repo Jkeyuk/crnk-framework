@@ -21,21 +21,21 @@ public final class OperationLidUtils {
 		if (operations != null && !operations.isEmpty()) {
 			operations.stream()
 					.map(OrderedOperation::getOperation)
-					.filter(o -> o.getOp().equalsIgnoreCase(HttpMethod.POST.name()))
+					.filter(o -> isPostOperation(o) && isUsingLid(o))
 					.forEach(o -> {
 						Set<String> orDefault = map.getOrDefault(o.getValue().getType(), new HashSet<>());
-						orDefault.add(o.getValue().getId());
+						orDefault.add(o.getValue().getLid());
 						map.put(o.getValue().getType(), orDefault);
 					});
 		}
 		return map;
 	}
 
-	public static boolean hasLid(Map<String, Set<String>> lidsPerType, String type, String id) {
-		if (StringUtils.isBlank(type) || StringUtils.isBlank(id) || isEmpty(lidsPerType)) {
+	public static boolean containsLid(Map<String, Set<String>> lidsPerType, String type, String lid) {
+		if (StringUtils.isBlank(type) || StringUtils.isBlank(lid) || isEmpty(lidsPerType)) {
 			return false;
 		}
-		return lidsPerType.containsKey(type) && lidsPerType.get(type).contains(id);
+		return lidsPerType.containsKey(type) && lidsPerType.get(type).contains(lid);
 	}
 
 	public static void resolveLidsForRelations(
@@ -64,13 +64,21 @@ public final class OperationLidUtils {
 			Map<String, String> lidPerId,
 			ResourceIdentifier resourceIdentifier
 	) {
-		if (hasLid(lidsPerType, resourceIdentifier.getType(), resourceIdentifier.getId())) {
+		if (containsLid(lidsPerType, resourceIdentifier.getType(), resourceIdentifier.getId())) {
 			resourceIdentifier.setId(lidPerId.get(resourceIdentifier.getId()));
 		}
 	}
 
 	private static <T, K> boolean isEmpty(Map<T, K> col) {
 		return col == null || col.isEmpty();
+	}
+
+	private static boolean isUsingLid(io.crnk.operations.Operation o) {
+		return o.getValue() != null && StringUtils.isBlank(o.getValue().getId()) && !StringUtils.isBlank(o.getValue().getLid());
+	}
+
+	private static boolean isPostOperation(io.crnk.operations.Operation o) {
+		return o.getOp().equalsIgnoreCase(HttpMethod.POST.name());
 	}
 
 }

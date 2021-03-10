@@ -15,6 +15,7 @@ import io.crnk.core.engine.internal.dispatcher.path.PathBuilder;
 import io.crnk.core.engine.internal.dispatcher.path.ResourcePath;
 import io.crnk.core.engine.internal.http.JsonApiRequestProcessorHelper;
 import io.crnk.core.engine.internal.utils.PreconditionUtil;
+import io.crnk.core.engine.internal.utils.StringUtils;
 import io.crnk.core.engine.parser.TypeParser;
 import io.crnk.core.engine.query.QueryContext;
 import io.crnk.core.engine.registry.RegistryEntry;
@@ -315,7 +316,7 @@ public class OperationsModule implements Module {
                 Response response = requestDispatcher.dispatchRequest(path, method, parameters, requestBody);
                 boolean success = response.getHttpStatus() < 400;
 
-				if (success && OperationLidUtils.hasLid(lidsPerType, operation.getValue().getType(), operation.getValue().getId())) {
+				if (success && !StringUtils.isBlank(operation.getValue().getLid())) {
 					trackLids(lidPerId, operation.getValue(), response.getDocument().getData());
 				}
 
@@ -338,12 +339,12 @@ public class OperationsModule implements Module {
 
 	private static void trackLids(
 			Map<String, String> lidPerId,
-			Resource resource,
+			OperationResource resource,
 			Nullable<Object> responseData
 	) {
 		if (responseData.isPresent() && responseData.get() instanceof Resource) {
 			Resource r = (Resource) responseData.get();
-			lidPerId.put(resource.getId(), r.getId());
+			lidPerId.put(resource.getLid(), r.getId());
 		}
 	}
 
