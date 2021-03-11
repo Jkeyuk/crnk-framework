@@ -64,8 +64,8 @@ public final class OperationLidUtils {
 			Map<String, String> lidPerId,
 			ResourceIdentifier resourceIdentifier
 	) {
-		if (containsLid(lidsPerType, resourceIdentifier.getType(), resourceIdentifier.getId())) {
-			resourceIdentifier.setId(lidPerId.get(resourceIdentifier.getId()));
+		if (containsLid(lidsPerType, resourceIdentifier.getType(), resourceIdentifier.getLid())) {
+			resourceIdentifier.setId(lidPerId.get(resourceIdentifier.getLid()));
 		}
 	}
 
