@@ -10,6 +10,9 @@ public class ResourceIdentifier implements Comparable<ResourceIdentifier> {
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	protected String id;
 
+	/* Local Identifier used for Json API Atomicity with operation endpoints */
+	protected String lid;
+
 	protected String type;
 
 	public ResourceIdentifier() {
@@ -71,5 +74,13 @@ public class ResourceIdentifier implements Comparable<ResourceIdentifier> {
 
 	public ResourceIdentifier toIdentifier() {
 		return this;
+	}
+
+	public String getLid() {
+		return lid;
+	}
+
+	public void setLid(String lid) {
+		this.lid = lid;
 	}
 }
