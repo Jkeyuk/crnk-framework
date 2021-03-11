@@ -1,9 +1,5 @@
 package io.crnk.operations.server;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crnk.core.engine.dispatcher.Response;
 import io.crnk.core.engine.http.HttpHeaders;
@@ -11,13 +7,16 @@ import io.crnk.core.engine.http.HttpRequestContext;
 import io.crnk.core.engine.http.HttpRequestProcessor;
 import io.crnk.core.engine.http.HttpResponse;
 import io.crnk.core.engine.internal.exception.ExceptionMapperRegistry;
-import io.crnk.core.engine.internal.utils.StringUtils;
 import io.crnk.core.engine.query.QueryContext;
 import io.crnk.core.module.Module;
 import io.crnk.operations.Operation;
 import io.crnk.operations.OperationResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 public class OperationsRequestProcessor implements HttpRequestProcessor {
 
