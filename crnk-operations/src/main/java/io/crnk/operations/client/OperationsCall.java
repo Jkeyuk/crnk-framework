@@ -1,10 +1,5 @@
 package io.crnk.operations.client;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.crnk.client.ClientFormat;
 import io.crnk.client.CrnkClient;
@@ -27,8 +22,12 @@ import io.crnk.core.queryspec.internal.QuerySpecAdapter;
 import io.crnk.core.repository.response.JsonApiResponse;
 import io.crnk.operations.Operation;
 import io.crnk.operations.OperationResponse;
-import io.crnk.operations.document.OperationResource;
 import io.crnk.operations.server.OperationsRequestProcessor;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class OperationsCall {
 
@@ -45,7 +44,7 @@ public class OperationsCall {
 	public void add(HttpMethod method, Object object) {
 		Operation operation = new Operation();
 
-		OperationResource resource = toResource(object);
+		Resource resource = toResource(object);
 
 		operation.setOp(method.toString());
 		operation.setPath(computePath(method, resource));
@@ -75,7 +74,7 @@ public class OperationsCall {
 		return resource.getType() + "/" + resource.getId() + "/";
 	}
 
-	protected OperationResource toResource(Object object) {
+	protected Resource toResource(Object object) {
 		JsonApiResponse response = new JsonApiResponse();
 		response.setEntity(object);
 
@@ -89,8 +88,7 @@ public class OperationsCall {
 		DocumentMapper documentMapper = crnk.getDocumentMapper();
 		DocumentMappingConfig mappingConfig = new DocumentMappingConfig();
 		Document document = documentMapper.toDocument(response, queryAdapter, mappingConfig).get();
-		Resource resource = document.getSingleData().get();
-		return new OperationResource(resource);
+		return document.getSingleData().get();
 	}
 
 	protected <T> T fromResource(Document document, Class<T> clazz) {

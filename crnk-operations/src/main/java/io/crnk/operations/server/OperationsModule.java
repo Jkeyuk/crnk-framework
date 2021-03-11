@@ -31,7 +31,6 @@ import io.crnk.core.repository.decorate.Wrapper;
 import io.crnk.core.utils.Nullable;
 import io.crnk.operations.Operation;
 import io.crnk.operations.OperationResponse;
-import io.crnk.operations.document.OperationResource;
 import io.crnk.operations.internal.OperationLidUtils;
 import io.crnk.operations.internal.OperationParameterUtils;
 import io.crnk.operations.server.order.DependencyOrderStrategy;
@@ -162,7 +161,7 @@ public class OperationsModule implements Module {
                 RegistryEntry entry = jsonPath.getRootEntry();
                 String idString = entry.getResourceInformation().toIdString(jsonPath.getId());
 
-                OperationResource resource = new OperationResource();
+                Resource resource = new Resource();
                 resource.setType(jsonPath.getRootEntry().getResourceInformation().getResourceType());
                 resource.setId(idString);
                 operation.setValue(resource);
@@ -339,7 +338,7 @@ public class OperationsModule implements Module {
 
 	private static void trackLids(
 			Map<String, String> lidPerId,
-			OperationResource resource,
+			Resource resource,
 			Nullable<Object> responseData
 	) {
 		if (responseData.isPresent() && responseData.get() instanceof Resource) {
