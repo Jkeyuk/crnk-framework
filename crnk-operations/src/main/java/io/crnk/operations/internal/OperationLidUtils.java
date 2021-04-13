@@ -39,16 +39,14 @@ public final class OperationLidUtils {
 	/**
 	 * Resolves internalized identifiers based on the given local Identifiers for the given relationships.
 	 *
-	 * @param localIdPerType   local identifiers grouped by type
-	 * @param relationships    relations to resolve
-	 * @param InternalIdPerLid internal identifiers grouped by their associated local Identifier
+	 * @param trackedLids   local identifiers grouped by type
+	 * @param relationships relations to resolve
 	 */
 	public static void resolveLidsForRelations(
-			Map<String, Set<String>> localIdPerType,
-			Map<String, Relationship> relationships,
-			Map<String, String> InternalIdPerLid
+			Map<String, Map<String, String>> trackedLids,
+			Map<String, Relationship> relationships
 	) {
-		if (isEmpty(localIdPerType) || isEmpty(relationships) || isEmpty(InternalIdPerLid)) {
+		if (isEmpty(relationships) || isEmpty(trackedLids)) {
 			return;
 		}
 
@@ -56,29 +54,28 @@ public final class OperationLidUtils {
 			Nullable<Object> data = r.getData();
 			if (data.isPresent()) {
 				if (data.get() instanceof Collection) {
-					r.getCollectionData().get().forEach(rId -> resolveLid(localIdPerType, InternalIdPerLid, rId));
+					r.getCollectionData().get().forEach(rId -> resolveLid(trackedLids, rId));
 				} else {
-					resolveLid(localIdPerType, InternalIdPerLid, r.getSingleData().get());
+					resolveLid(trackedLids, r.getSingleData().get());
 				}
 			}
 		});
 	}
 
-	private static void resolveLid(
-			Map<String, Set<String>> lidsPerType,
-			Map<String, String> lidPerId,
-			ResourceIdentifier resourceIdentifier
-	) {
-		if (containsLid(lidsPerType, resourceIdentifier.getType(), resourceIdentifier.getLid())) {
-			resourceIdentifier.setId(lidPerId.get(resourceIdentifier.getLid()));
+	private static void resolveLid(Map<String, Map<String, String>> trackedLids, ResourceIdentifier resourceIdentifier) {
+		String lid = resourceIdentifier.getLid();
+		String type = resourceIdentifier.getType();
+
+		if (containsLid(trackedLids, type, lid)) {
+			resourceIdentifier.setId(trackedLids.get(type).get(lid));
 		}
 	}
 
-	private static boolean containsLid(Map<String, Set<String>> lidsPerType, String type, String lid) {
-		if (StringUtils.isBlank(type) || StringUtils.isBlank(lid) || isEmpty(lidsPerType)) {
+	private static boolean containsLid(Map<String, Map<String, String>> trackedLids, String type, String lid) {
+		if (StringUtils.isBlank(type) || StringUtils.isBlank(lid) || isEmpty(trackedLids)) {
 			return false;
 		}
-		return lidsPerType.containsKey(type) && lidsPerType.get(type).contains(lid);
+		return trackedLids.containsKey(type) && trackedLids.get(type).containsKey(lid);
 	}
 
 	private static <T, K> boolean isEmpty(Map<T, K> col) {
