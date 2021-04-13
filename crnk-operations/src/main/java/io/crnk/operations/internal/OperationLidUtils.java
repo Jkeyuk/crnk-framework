@@ -16,34 +16,39 @@ import java.util.Set;
 
 public final class OperationLidUtils {
 
+	/**
+	 * Returns a map where a set of local identifiers are grouped per resource type, parsed from a given list of operations.
+	 *
+	 * @param operations operations to parse
+	 * @return Returns a map where a set of local identifiers are grouped per resource type
+	 */
 	public static Map<String, Set<String>> parseLidsPerType(List<OrderedOperation> operations) {
 		Map<String, Set<String>> map = new HashMap<>();
 		if (operations != null && !operations.isEmpty()) {
-			operations.stream()
-					.map(OrderedOperation::getOperation)
+			operations.stream().map(OrderedOperation::getOperation)
 					.filter(o -> isPostOperation(o) && isUsingLid(o))
 					.forEach(o -> {
-						Set<String> orDefault = map.getOrDefault(o.getValue().getType(), new HashSet<>());
-						orDefault.add(o.getValue().getLid());
-						map.put(o.getValue().getType(), orDefault);
+						Set<String> localIdSet = map.getOrDefault(o.getValue().getType(), new HashSet<>());
+						localIdSet.add(o.getValue().getLid());
+						map.put(o.getValue().getType(), localIdSet);
 					});
 		}
 		return map;
 	}
 
-	public static boolean containsLid(Map<String, Set<String>> lidsPerType, String type, String lid) {
-		if (StringUtils.isBlank(type) || StringUtils.isBlank(lid) || isEmpty(lidsPerType)) {
-			return false;
-		}
-		return lidsPerType.containsKey(type) && lidsPerType.get(type).contains(lid);
-	}
-
+	/**
+	 * Resolves internalized identifiers based on the given local Identifiers for the given relationships.
+	 *
+	 * @param localIdPerType   local identifiers grouped by type
+	 * @param relationships    relations to resolve
+	 * @param InternalIdPerLid internal identifiers grouped by their associated local Identifier
+	 */
 	public static void resolveLidsForRelations(
-			Map<String, Set<String>> lidsPerType,
+			Map<String, Set<String>> localIdPerType,
 			Map<String, Relationship> relationships,
-			Map<String, String> lidPerId
+			Map<String, String> InternalIdPerLid
 	) {
-		if (isEmpty(lidsPerType) || isEmpty(relationships) || isEmpty(lidPerId)) {
+		if (isEmpty(localIdPerType) || isEmpty(relationships) || isEmpty(InternalIdPerLid)) {
 			return;
 		}
 
@@ -51,9 +56,9 @@ public final class OperationLidUtils {
 			Nullable<Object> data = r.getData();
 			if (data.isPresent()) {
 				if (data.get() instanceof Collection) {
-					r.getCollectionData().get().forEach(rId -> resolveLid(lidsPerType, lidPerId, rId));
+					r.getCollectionData().get().forEach(rId -> resolveLid(localIdPerType, InternalIdPerLid, rId));
 				} else {
-					resolveLid(lidsPerType, lidPerId, r.getSingleData().get());
+					resolveLid(localIdPerType, InternalIdPerLid, r.getSingleData().get());
 				}
 			}
 		});
@@ -67,6 +72,13 @@ public final class OperationLidUtils {
 		if (containsLid(lidsPerType, resourceIdentifier.getType(), resourceIdentifier.getLid())) {
 			resourceIdentifier.setId(lidPerId.get(resourceIdentifier.getLid()));
 		}
+	}
+
+	private static boolean containsLid(Map<String, Set<String>> lidsPerType, String type, String lid) {
+		if (StringUtils.isBlank(type) || StringUtils.isBlank(lid) || isEmpty(lidsPerType)) {
+			return false;
+		}
+		return lidsPerType.containsKey(type) && lidsPerType.get(type).contains(lid);
 	}
 
 	private static <T, K> boolean isEmpty(Map<T, K> col) {
