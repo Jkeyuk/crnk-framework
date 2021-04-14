@@ -62,11 +62,7 @@ class OperationLidUtilsTest {
 		Relationship relationship = newRelationship(Nullable.of(identifier));
 		Relationship collectionRelation = newRelationship(Nullable.of(Collections.singletonList(collectionIdentifier)));
 
-		Map<String, Relationship> relData = ImmutableMap.of(
-				"fishType", relationship,
-				"listOfFishTypes", collectionRelation);
-
-		OperationLidUtils.resolveLidsForRelations(trackedLids, relData);
+		OperationLidUtils.resolveLidsForRelations(trackedLids, Arrays.asList(relationship, collectionRelation));
 
 		Assertions.assertEquals(expectedInternalId, identifier.getId());
 		Assertions.assertEquals(expectedInternalId, collectionIdentifier.getId());

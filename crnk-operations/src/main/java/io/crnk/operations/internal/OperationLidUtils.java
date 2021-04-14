@@ -44,13 +44,13 @@ public final class OperationLidUtils {
 	 */
 	public static void resolveLidsForRelations(
 			Map<String, Map<String, String>> trackedLids,
-			Map<String, Relationship> relationships
+			Collection<Relationship> relationships
 	) {
-		if (isEmpty(relationships) || isEmpty(trackedLids)) {
+		if (relationships == null || relationships.size() == 0 || isEmpty(trackedLids)) {
 			return;
 		}
 
-		relationships.forEach((f, r) -> {
+		relationships.forEach((r) -> {
 			Nullable<Object> data = r.getData();
 			if (data.isPresent()) {
 				if (data.get() instanceof Collection) {

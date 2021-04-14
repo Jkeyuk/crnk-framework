@@ -310,7 +310,7 @@ public class OperationsModule implements Module {
                 String method = operation.getOp();
 
                 // Resolve local identifiers with tracked internalized identifiers
-				OperationLidUtils.resolveLidsForRelations(trackedLids, operation.getValue().getRelationships());
+				OperationLidUtils.resolveLidsForRelations(trackedLids, operation.getValue().getRelationships().values());
 
                 Document requestBody = new Document();
                 requestBody.setData(Nullable.of(operation.getValue()));
