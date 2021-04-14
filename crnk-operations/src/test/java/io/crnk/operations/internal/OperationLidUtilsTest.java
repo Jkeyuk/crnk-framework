@@ -34,18 +34,18 @@ class OperationLidUtilsTest {
 		OrderedOperation operation3 = new OrderedOperation(
 				new Operation(HttpMethod.POST.name(), "/fish", newResource(expectedType2, expectedLid3)), 3);
 
-		Map<String, Set<String>> stringSetMap = OperationLidUtils.parseLidsPerType(Arrays.asList(operation, operation2, operation3));
+		Map<String, Set<String>> result = OperationLidUtils.parseLidsPerType(Arrays.asList(operation, operation2, operation3));
 
-		Assertions.assertTrue(stringSetMap.containsKey(expectedType));
-		Assertions.assertTrue(stringSetMap.containsKey(expectedType2));
-		Assertions.assertEquals(2, stringSetMap.size());
+		Assertions.assertTrue(result.containsKey(expectedType));
+		Assertions.assertTrue(result.containsKey(expectedType2));
+		Assertions.assertEquals(2, result.size());
 
-		Assertions.assertEquals(1, stringSetMap.get(expectedType).size());
-		Assertions.assertEquals(2, stringSetMap.get(expectedType2).size());
+		Assertions.assertEquals(1, result.get(expectedType).size());
+		Assertions.assertEquals(2, result.get(expectedType2).size());
 
-		Assertions.assertTrue(stringSetMap.get(expectedType).contains(expectedLid));
-		Assertions.assertTrue(stringSetMap.get(expectedType2).contains(expectedLid2));
-		Assertions.assertTrue(stringSetMap.get(expectedType2).contains(expectedLid3));
+		Assertions.assertTrue(result.get(expectedType).contains(expectedLid));
+		Assertions.assertTrue(result.get(expectedType2).contains(expectedLid2));
+		Assertions.assertTrue(result.get(expectedType2).contains(expectedLid3));
 	}
 
 	@Test
@@ -56,19 +56,11 @@ class OperationLidUtilsTest {
 
 		Map<String, Map<String, String>> trackedLids = ImmutableMap.of(type, ImmutableMap.of(localId, expectedInternalId));
 
-		ResourceIdentifier identifier = new ResourceIdentifier();
-		identifier.setType(type);
-		identifier.setLid(localId);
+		ResourceIdentifier identifier = newResourceIdentifier(type, localId);
+		ResourceIdentifier collectionIdentifier = newResourceIdentifier(type, localId);
 
-		ResourceIdentifier collectionIdentifier = new ResourceIdentifier();
-		collectionIdentifier.setType(type);
-		collectionIdentifier.setLid(localId);
-
-		Relationship relationship = new Relationship();
-		relationship.setData(Nullable.of(identifier));
-
-		Relationship collectionRelation = new Relationship();
-		collectionRelation.setData(Nullable.of(Collections.singletonList(collectionIdentifier)));
+		Relationship relationship = newRelationship(Nullable.of(identifier));
+		Relationship collectionRelation = newRelationship(Nullable.of(Collections.singletonList(collectionIdentifier)));
 
 		Map<String, Relationship> relData = ImmutableMap.of(
 				"fishType", relationship,
@@ -78,6 +70,19 @@ class OperationLidUtilsTest {
 
 		Assertions.assertEquals(expectedInternalId, identifier.getId());
 		Assertions.assertEquals(expectedInternalId, collectionIdentifier.getId());
+	}
+
+	private static Relationship newRelationship(Nullable<Object> data) {
+		Relationship relationship = new Relationship();
+		relationship.setData(data);
+		return relationship;
+	}
+
+	private static ResourceIdentifier newResourceIdentifier(String type, String localId) {
+		ResourceIdentifier identifier = new ResourceIdentifier();
+		identifier.setType(type);
+		identifier.setLid(localId);
+		return identifier;
 	}
 
 	private static Resource newResource(String expectedType, String expectedLid) {
