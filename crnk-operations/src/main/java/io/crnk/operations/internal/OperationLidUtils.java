@@ -1,6 +1,7 @@
 package io.crnk.operations.internal;
 
 import io.crnk.core.engine.document.Relationship;
+import io.crnk.core.engine.document.Resource;
 import io.crnk.core.engine.document.ResourceIdentifier;
 import io.crnk.core.engine.http.HttpMethod;
 import io.crnk.core.engine.internal.utils.StringUtils;
@@ -14,7 +15,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Utility class to support the resolution of local identifiers to internal generated identifiers.
+ */
 public final class OperationLidUtils {
+
+	private OperationLidUtils() {
+		// We cannot create an instance of a utility class
+	}
 
 	/**
 	 * Returns a map where a set of local identifiers are grouped per resource type, parsed from a given list of operations.
@@ -26,7 +34,7 @@ public final class OperationLidUtils {
 		Map<String, Set<String>> map = new HashMap<>();
 		if (operations != null && !operations.isEmpty()) {
 			operations.stream().map(OrderedOperation::getOperation)
-					.filter(o -> isPostOperation(o) && isUsingLid(o))
+					.filter(o -> isPostOperation(o) && isUsingLid(o.getValue()))
 					.forEach(o -> {
 						Set<String> localIdSet = map.getOrDefault(o.getValue().getType(), new HashSet<>());
 						localIdSet.add(o.getValue().getLid());
@@ -46,7 +54,7 @@ public final class OperationLidUtils {
 			Map<String, Map<String, String>> trackedLids,
 			Collection<Relationship> relationships
 	) {
-		if (relationships == null || relationships.size() == 0 || isEmpty(trackedLids)) {
+		if (relationships == null || relationships.size() == 0 || isBlank(trackedLids)) {
 			return;
 		}
 
@@ -71,21 +79,47 @@ public final class OperationLidUtils {
 		}
 	}
 
+	/**
+	 * Returns true if the given type and local identifier is tracked by a given map.
+	 *
+	 * @param trackedLids map to check
+	 * @param type        type to check is present
+	 * @param lid         local id to check is present
+	 * @return Returns true if the given type and local identifier is tracked by a given map.
+	 */
 	private static boolean containsLid(Map<String, Map<String, String>> trackedLids, String type, String lid) {
-		if (StringUtils.isBlank(type) || StringUtils.isBlank(lid) || isEmpty(trackedLids)) {
+		if (StringUtils.isBlank(type) || StringUtils.isBlank(lid) || isBlank(trackedLids)) {
 			return false;
 		}
 		return trackedLids.containsKey(type) && trackedLids.get(type).containsKey(lid);
 	}
 
-	private static <T, K> boolean isEmpty(Map<T, K> col) {
+	/**
+	 * Returns true if the given collection is null or empty
+	 *
+	 * @param col collection to check
+	 * @return Returns true if the given collection is null or empty
+	 */
+	private static <T, K> boolean isBlank(Map<T, K> col) {
 		return col == null || col.isEmpty();
 	}
 
-	private static boolean isUsingLid(io.crnk.operations.Operation o) {
-		return o.getValue() != null && StringUtils.isBlank(o.getValue().getId()) && !StringUtils.isBlank(o.getValue().getLid());
+	/**
+	 * Returns true if a given Resource is using a local identifier and not a normal Identifier.
+	 *
+	 * @param value value to check
+	 * @return Returns true if a given Resource is using a local identifier and not a normal Identifier.
+	 */
+	private static boolean isUsingLid(Resource value) {
+		return value != null && StringUtils.isBlank(value.getId()) && !StringUtils.isBlank(value.getLid());
 	}
 
+	/**
+	 * returns true if a given operation is a POST operation
+	 *
+	 * @param o operation to check
+	 * @return returns true if a given operation is a POST operation
+	 */
 	private static boolean isPostOperation(io.crnk.operations.Operation o) {
 		return o.getOp().equalsIgnoreCase(HttpMethod.POST.name());
 	}

@@ -352,24 +352,16 @@ public class OperationsModule implements Module {
 			String type = resource.getType();
 			String lid = resource.getLid();
 
+			if (StringUtils.isBlank(internalId) || StringUtils.isBlank(type) || StringUtils.isBlank(lid)) {
+				return;
+			}
+
 			if (lidsPerType.containsKey(type) && lidsPerType.get(type).contains(lid)) {
-				trackLid(trackedLids, internalId, type, lid);
+				Map<String, String> lidsOrDefault = trackedLids.getOrDefault(type, new HashMap<>());
+				lidsOrDefault.put(lid, internalId);
+				trackedLids.put(type, lidsOrDefault);
 			}
 		}
-	}
-
-	private static void trackLid(
-			Map<String, Map<String, String>> trackedLids,
-			String internalId,
-			String type,
-			String lid
-	) {
-		if (StringUtils.isBlank(internalId) || StringUtils.isBlank(type) || StringUtils.isBlank(lid)) {
-			return;
-		}
-		Map<String, String> lidsOrDefault = trackedLids.getOrDefault(type, new HashMap<>());
-		lidsOrDefault.put(lid, internalId);
-		trackedLids.put(type, lidsOrDefault);
 	}
 
 	private boolean supportsBulk(RegistryEntry rootEntry) {
