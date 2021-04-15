@@ -198,8 +198,10 @@ public class OperationsModule implements Module {
 
         PathBuilder pathBuilder = getPathBuilder();
 
+		// We parse the local identifiers for the incoming operations and group them by resource type
 		Map<String, Set<String>> lidsPerType = OperationLidUtils.parseLidsPerType(orderedOperations);
-		Map<String, String> lidPerId = new HashMap<>();
+		// Used to pair internalized identifiers by their local identifiers and group them by resource type.
+		Map<String, Map<String, String>> trackedLids = new HashMap<>();
 
         while (index < orderedOperations.size()) {
             OrderedOperation orderedOperation = orderedOperations.get(index);
@@ -217,7 +219,7 @@ public class OperationsModule implements Module {
 
             if (!method.equals(bulkMethod) || !type.equals(bulkType)) {
                 if (!bulk.isEmpty()) {
-                    boolean success = bulkExecuteOperations(bulk, responses, lidsPerType, lidPerId);
+                    boolean success = bulkExecuteOperations(bulk, responses, lidsPerType, trackedLids);
                     if (!success) {
                         successful = false;
                         if (!resumeOnError) {
@@ -234,7 +236,7 @@ public class OperationsModule implements Module {
         }
 
         if (!bulk.isEmpty()) {
-            boolean success = bulkExecuteOperations(bulk, responses, lidsPerType, lidPerId);
+            boolean success = bulkExecuteOperations(bulk, responses, lidsPerType, trackedLids);
             if (!success) {
                 successful = false;
             }
@@ -258,7 +260,7 @@ public class OperationsModule implements Module {
 			List<OrderedOperation> operations,
 			OperationResponse[] responses,
 			Map<String, Set<String>> lidsPerType,
-			Map<String, String> lidPerId
+			Map<String, Map<String, String>> trackedLids
 	) {
         RequestDispatcher requestDispatcher = moduleContext.getRequestDispatcher();
 
@@ -307,7 +309,8 @@ public class OperationsModule implements Module {
                 Map<String, Set<String>> parameters = OperationParameterUtils.parseParameters(operation.getPath());
                 String method = operation.getOp();
 
-				OperationLidUtils.resolveLidsForRelations(lidsPerType, operation.getValue().getRelationships(), lidPerId);
+                // Resolve local identifiers with tracked internalized identifiers
+				OperationLidUtils.resolveLidsForRelations(trackedLids, operation.getValue().getRelationships().values());
 
                 Document requestBody = new Document();
                 requestBody.setData(Nullable.of(operation.getValue()));
@@ -315,8 +318,9 @@ public class OperationsModule implements Module {
                 Response response = requestDispatcher.dispatchRequest(path, method, parameters, requestBody);
                 boolean success = response.getHttpStatus() < 400;
 
+                // Track local identifiers with their associated internal identifiers returned from the response.
 				if (success && !StringUtils.isBlank(operation.getValue().getLid())) {
-					trackLids(lidPerId, operation.getValue(), response.getDocument().getData());
+					trackLids(lidsPerType, trackedLids, operation.getValue(), response.getDocument().getData());
 				}
 
 				OperationResponse operationResponse = new OperationResponse();
@@ -337,13 +341,26 @@ public class OperationsModule implements Module {
     }
 
 	private static void trackLids(
-			Map<String, String> lidPerId,
+			Map<String, Set<String>> lidsPerType,
+			Map<String, Map<String, String>> trackedLids,
 			Resource resource,
 			Nullable<Object> responseData
 	) {
 		if (responseData.isPresent() && responseData.get() instanceof Resource) {
-			Resource r = (Resource) responseData.get();
-			lidPerId.put(resource.getLid(), r.getId());
+			Resource response = (Resource) responseData.get();
+			String internalId = response.getId();
+			String type = resource.getType();
+			String lid = resource.getLid();
+
+			if (StringUtils.isBlank(internalId) || StringUtils.isBlank(type) || StringUtils.isBlank(lid)) {
+				return;
+			}
+
+			if (lidsPerType.containsKey(type) && lidsPerType.get(type).contains(lid)) {
+				Map<String, String> lidsOrDefault = trackedLids.getOrDefault(type, new HashMap<>());
+				lidsOrDefault.put(lid, internalId);
+				trackedLids.put(type, lidsOrDefault);
+			}
 		}
 	}
 
