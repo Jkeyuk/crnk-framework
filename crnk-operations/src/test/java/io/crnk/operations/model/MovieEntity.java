@@ -1,11 +1,12 @@
 package io.crnk.operations.model;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.OneToOne;
 import java.util.Set;
 import java.util.UUID;
-
 
 @Entity
 public class MovieEntity extends MovieInfo {
@@ -15,6 +16,9 @@ public class MovieEntity extends MovieInfo {
 
 	@ManyToMany
 	private Set<PersonEntity> directors;
+
+	@OneToOne(cascade = CascadeType.ALL)
+	private VoteEntity vote;
 
 	public UUID getId() {
 		return id;
@@ -30,5 +34,13 @@ public class MovieEntity extends MovieInfo {
 
 	public void setDirectors(Set<PersonEntity> directors) {
 		this.directors = directors;
+	}
+
+	public VoteEntity getVote() {
+		return vote;
+	}
+
+	public void setVote(VoteEntity vote) {
+		this.vote = vote;
 	}
 }
